@@ -84,18 +84,18 @@ void implateBuzze(void)
 
  uint8_t anotherchannel(uint8_t x)
 {
-	if(((remote&0XFE)>>1)==9)
+	if(x==9)
 	{
-		return 1;
+		if((remote>>1)==9) return 1;
+	  else return 0;
 	}
 	if(remote&0X01)
 	{
-		if(((remote&0XFE)>>1)==x)
+		if((remote>>1)==x)
 		{
-			
 			return 1;
 		}
-		return 0;
+		else return 0;
 	}
 	else
 	{
@@ -131,7 +131,7 @@ void TIM3_IRQHandler(void)
 				cnt=0;
 				keyShakeflag=0;
 			}
-
+			remote=1;
 		}
 		else if((scan_keypad()==2 && keyShakeflag) || anotherchannel(2))
 		{
@@ -148,7 +148,7 @@ void TIM3_IRQHandler(void)
 				cnt=0;
 				keyShakeflag=0;
 			}
-
+			remote=1;
 		}
 		else if((scan_keypad()==3 && keyShakeflag) || anotherchannel(3))
 		{
@@ -165,7 +165,7 @@ void TIM3_IRQHandler(void)
 				cnt=0;
 				keyShakeflag=0;
 			}
-
+			remote=1;
 		}
 		/*风扇定时*/
 		else if((scan_keypad()==4 && keyShakeflag) || anotherchannel(4))
@@ -200,6 +200,7 @@ void TIM3_IRQHandler(void)
 				cnt=0;
 				keyShakeflag=0;
 			}
+			remote=1;
 		}
 		/*风扇摇头
 		可以考虑加个摇头速度*/
@@ -218,6 +219,7 @@ void TIM3_IRQHandler(void)
 				cnt=0;
 				keyShakeflag=0;
 			}
+			remote=1;
 		}
 		/*智能模式
 		1-智能模式
@@ -239,7 +241,7 @@ void TIM3_IRQHandler(void)
 				keyShakeflag=0;
 				BKP_WriteData(BKP_DR4,1);
 			}
-
+			remote=1;
 		}
 		else if((scan_keypad()==7 && keyShakeflag) || anotherchannel(7))
 		{
@@ -251,6 +253,7 @@ void TIM3_IRQHandler(void)
 				cnt=0;
 				BKP_WriteData(BKP_DR3,setTime);
 			}
+			remote=1;
 		}
 		else if((scan_keypad()==8 && keyShakeflag) || anotherchannel(8))
 		{
@@ -261,13 +264,15 @@ void TIM3_IRQHandler(void)
 				cnt=0;
 				BKP_WriteData(BKP_DR3,setTime);
 			}
+			remote=1;
 		}
 		else if((scan_keypad()==9 && keyShakeflag) || anotherchannel(9))
 		{
 			cnt++;
+			OLED_Clear();
 			if(!(remote&0X01) && (cnt>5 || anotherchannel(9)))
 			{
-				remote&=1;
+				remote=1;
 				keyShakeflag=0;
 				cnt=0;
 			}
@@ -277,7 +282,6 @@ void TIM3_IRQHandler(void)
 				keyShakeflag=0;
 				cnt=0;
 			}
-			
 		}
 		else if(scan_keypad()==0)
 		{

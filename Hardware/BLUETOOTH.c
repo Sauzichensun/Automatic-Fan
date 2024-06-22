@@ -49,7 +49,7 @@ void RemoteInit(void)
 	NVIC_InitStructure.NVIC_IRQChannel=USART1_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelCmd=ENABLE;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=0;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority=1;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority=3;
 	
 	NVIC_Init(&NVIC_InitStructure);
 	USART_Init(USART1,&USART_Structure);
@@ -102,11 +102,12 @@ void USART1_IRQHandler(void)
 
 	if(USART_GetFlagStatus(USART1,USART_IT_RXNE)==SET)
 	{
-			IsBuzzeAndFlash();
+//			IsBuzzeAndFlash();
 			uint8_t Rxdata=0;
 			Rxdata=USART_ReceiveData(USART1);
 			Serial_SendByte(Rxdata);
 			remote = (Rxdata<<1) | (remote & 0X01);
+			
 	}
-		USART_ClearITPendingBit(USART1, USART_IT_RXNE);	
+	USART_ClearITPendingBit(USART1, USART_IT_RXNE);	
 }
