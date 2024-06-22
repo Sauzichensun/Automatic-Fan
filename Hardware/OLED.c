@@ -17,19 +17,13 @@ extern uint8_t keyShakeflag;
 extern uint8_t servoShake;
 extern uint8_t mode;
 extern uint8_t setTimeTrigger;
+extern uint8_t impose;
 
 /*引脚初始化*/
 void OLED_I2C_Init(void)
 {
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
 	
-	GPIO_InitTypeDef GPIO_Instructure;
-	GPIO_Instructure.GPIO_Mode=GPIO_Mode_Out_PP;
-	GPIO_Instructure.GPIO_Pin=GPIO_Pin_6 | GPIO_Pin_7;
-	GPIO_Instructure.GPIO_Speed=GPIO_Speed_50MHz;
-	GPIO_Init(GPIOB,&GPIO_Instructure);
-	GPIO_ResetBits(GPIOB,GPIO_Pin_6);
-	GPIO_SetBits(GPIOB,GPIO_Pin_7);
 	
 	GPIO_InitTypeDef GPIO_InitStructure;
  	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
@@ -400,15 +394,50 @@ void OLED_ShowMenuInfoFan(void)
 	{
 		OLED_ShowString(2,1,"SetTime:");
 		OLED_ShowChar(2,13,' ');
-		OLED_ShowNum(2,9,setTime,2);
+		OLED_ShowNum(2,9,setTime,3);
 	}
 	else 
 	{
 		OLED_ShowString(2,1,"SetTime:");
-		OLED_ShowNum(2,9,setTime,2);
+		if(setTime<100)
+		{
+			OLED_ShowNum(2,9,setTime,2);
+			switch(impose)
+			{
+				case 1:
+					OLED_ShowString(2,11,"s");
+					break;
+				case 2:
+					OLED_ShowString(2,11,"m");
+					break;
+				case 3:
+					OLED_ShowString(2,11,"h");
+					break;
+			}
+		}	
+		else
+		{
+			OLED_ShowNum(2,9,setTime,3);
+			switch(impose)
+			{
+				case 1:
+					OLED_ShowString(2,12,"s");
+					break;
+				case 2:
+					OLED_ShowString(2,12,"m");
+					break;
+				case 3:
+					OLED_ShowString(2,12,"h");
+					break;
+			}
+		}
 		if(!setTime)
 		{
 			OLED_ShowChar(2,13,'R');
+		}
+		else
+		{
+			OLED_ShowChar(2,13,' ');
 		}
 	}
 	if(!mode) OLED_ShowString(3,1,"Mode:Manul");

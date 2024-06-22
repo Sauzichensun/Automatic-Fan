@@ -7,6 +7,7 @@
 #include "ADCTEMP.h"
 #include "LED.h"
 #include "TEMP.h"
+#include "BLUETOOTH.h"
 
 #define THRODV1 15
 #define THRODV2 32 
@@ -23,6 +24,8 @@ extern uint8_t temp;
 extern uint8_t tempfloat;
 extern uint8_t humi;
 extern uint8_t adctime;
+extern uint8_t impose;
+extern uint8_t remote;
 
 /*按键消抖定时器Timer3*/
 void Key_ShakeTimerInit(void)
@@ -68,6 +71,38 @@ void Key_ShakeTimerInit(void)
 }
 
 
+void implateBuzze(void)
+{
+	if(remote) 
+	{
+		BuzzeSetTimeTollde();
+		BuzzeSetTimeTollde();
+		ToleggePinsettime();
+		ToleggePinsettime();
+	}
+}
+
+ uint8_t anotherchannel(uint8_t x)
+{
+	if(((remote&0XFE)>>1)==9)
+	{
+		return 1;
+	}
+	if(remote&0X01)
+	{
+		if(((remote&0XFE)>>1)==x)
+		{
+			
+			return 1;
+		}
+		return 0;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
 
 /*每10ms进入一次时钟*/
 void TIM3_IRQHandler(void)
@@ -81,16 +116,16 @@ void TIM3_IRQHandler(void)
 	{
 		static uint8_t cnt=0;
 	
-		if(scan_keypad()==1 && keyShakeflag)
+		if((scan_keypad()==1 && keyShakeflag) || anotherchannel(1))
 		{
 			cnt++;
-			if(fanstate==1 && cnt>5) 
+			if(fanstate==1 && (cnt>5 || anotherchannel(1))) 
 			{
 				fanstate=0;
 				cnt=0;
 				keyShakeflag=0;
 			}
-			else if(fanstate!=1 && cnt>5)
+			else if(fanstate!=1 && (cnt>5 || anotherchannel(1)))
 			{
 				fanstate=1;
 				cnt=0;
@@ -98,16 +133,16 @@ void TIM3_IRQHandler(void)
 			}
 
 		}
-		else if(scan_keypad()==2 && keyShakeflag)
+		else if((scan_keypad()==2 && keyShakeflag) || anotherchannel(2))
 		{
 			cnt++;
-			if(fanstate==2 && cnt>5) 
+			if(fanstate==2 && (cnt>5 || anotherchannel(2))) 
 			{
 				fanstate=0;
 				cnt=0;
 				keyShakeflag=0;
 			}
-			else if(fanstate!=2 && cnt>5)
+			else if(fanstate!=2 && (cnt>5 || anotherchannel(2)))
 			{
 				fanstate=2;
 				cnt=0;
@@ -115,16 +150,16 @@ void TIM3_IRQHandler(void)
 			}
 
 		}
-		else if(scan_keypad()==3 && keyShakeflag)
+		else if((scan_keypad()==3 && keyShakeflag) || anotherchannel(3))
 		{
 			cnt++;
-			if(fanstate==3 && cnt>5) 
+			if(fanstate==3 && (cnt>5 || anotherchannel(3))) 
 			{
 				fanstate=0;
 				cnt=0;
 				keyShakeflag=0;
 			}
-			else if(fanstate!=3 && cnt>5)
+			else if(fanstate!=3 && (cnt>5 || anotherchannel(3)))
 			{
 				fanstate=3;
 				cnt=0;
@@ -133,37 +168,51 @@ void TIM3_IRQHandler(void)
 
 		}
 		/*风扇定时*/
-		else if(scan_keypad()==4 && keyShakeflag)
+		else if((scan_keypad()==4 && keyShakeflag) || anotherchannel(4))
 		{
 			cnt++;
-			if(cnt>5 && !setTimeTrigger)
+			if((cnt>5 || anotherchannel(4)) && !setTimeTrigger)
 			{
 				setTime=20;/*暂时固定后续改为可调节*/
 				cnt=0;
 				setTimeTrigger=1;
 				keyShakeflag=0;
+				impose=1;
 			}
-			if(cnt>5 && setTimeTrigger)
+			if((cnt>5 || anotherchannel(4)) && setTimeTrigger)
 			{
-				BuzzeTimeDown();
-				setTime=0;
-				setTimeTrigger=0;
+				switch(impose)
+				{
+					case 1:
+						impose=2;
+						break;
+					case 2:
+						impose = 3;
+						break;
+					case 3:
+						impose=1;
+						BuzzeTimeDown();
+						GPIO_SetBits(GPIOC,GPIO_Pin_13);
+						setTime=0;
+						setTimeTrigger=0;
+						break;
+				}
 				cnt=0;
 				keyShakeflag=0;
 			}
 		}
 		/*风扇摇头
 		可以考虑加个摇头速度*/
-		else if(scan_keypad()==5 && keyShakeflag)
+		else if((scan_keypad()==5 && keyShakeflag) || anotherchannel(5))
 		{
 			cnt++;
-			if(!servoShake && cnt>5)
+			if(!servoShake && (cnt>5 || anotherchannel(5)))
 			{
 				servoShake=1;
 				cnt=0;
 				keyShakeflag=0;	
 			}
-			else if(servoShake && cnt>5)
+			else if(servoShake && (cnt>5 || anotherchannel(5)))
 			{
 				servoShake=0;
 				cnt=0;
@@ -173,17 +222,17 @@ void TIM3_IRQHandler(void)
 		/*智能模式
 		1-智能模式
 		0-手动模式*/
-		else if(scan_keypad()==6 && keyShakeflag)
+		else if((scan_keypad()==6 && keyShakeflag) || anotherchannel(6))
 		{
 			cnt++;
-			if(mode && cnt>5)
+			if(mode && (cnt>5 || anotherchannel(6)))
 			{
 				mode=0;
 				cnt=0;
 				keyShakeflag=0;
 				BKP_WriteData(BKP_DR4,0);
 			}
-			else if(!mode && cnt>5)
+			else if(!mode && (cnt>5 || anotherchannel(6)))
 			{
 				mode=1;
 				cnt=0;
@@ -192,12 +241,50 @@ void TIM3_IRQHandler(void)
 			}
 
 		}
+		else if((scan_keypad()==7 && keyShakeflag) || anotherchannel(7))
+		{
+			cnt++;
+			if(setTimeTrigger && (cnt>5 || anotherchannel(7)))
+			{
+				setTime++;
+				keyShakeflag=0;
+				cnt=0;
+				BKP_WriteData(BKP_DR3,setTime);
+			}
+		}
+		else if((scan_keypad()==8 && keyShakeflag) || anotherchannel(8))
+		{
+			if(setTimeTrigger && (cnt>5 || anotherchannel(8)))
+			{
+				setTime--;
+				keyShakeflag=0;
+				cnt=0;
+				BKP_WriteData(BKP_DR3,setTime);
+			}
+		}
+		else if((scan_keypad()==9 && keyShakeflag) || anotherchannel(9))
+		{
+			cnt++;
+			if(!(remote&0X01) && (cnt>5 || anotherchannel(9)))
+			{
+				remote&=1;
+				keyShakeflag=0;
+				cnt=0;
+			}
+			else if((remote&0X01) && (cnt>5 || anotherchannel(9)))
+			{
+				remote=0;
+				keyShakeflag=0;
+				cnt=0;
+			}
+			
+		}
 		else if(scan_keypad()==0)
 		{
 			keyShakeflag=1;
 			cnt=0;
 		}
-		state=(servoShake<<2) | (mode<<1) | setTimeTrigger;
+		state=(servoShake<<2) | (mode<<1) | setTimeTrigger | (impose<<3);
 		BKP_WriteData(BKP_DR1,fanstate);
 		BKP_WriteData(BKP_DR2,state);
 		BKP_WriteData(BKP_DR3,setTime);
@@ -252,11 +339,13 @@ void Data_ShowTaskrInit(void)
 	TIM_Cmd(TIM2,ENABLE);	
 }
 
+
+
 /*20ms进入一次*/
 void TIM2_IRQHandler(void)
 {
 	 
-	static uint8_t cntSetTime=0;
+	static uint16_t cntSetTime=0;
 	static uint8_t flag=1;
 	if (TIM_GetITStatus(TIM2, TIM_IT_Update) == SET)
 	{
@@ -265,27 +354,42 @@ void TIM2_IRQHandler(void)
 		switch(fanstate)
 		{
 			case 1:
+				
 				Fan_On(1);
 				break;
 			case 2:
+				
 				Fan_On(2);
 				break;
 			case 3:
+				
 				Fan_On(3);
 				break;
 			case 0:
+				
 				Fan_Off();
 				break;
 		}
 		/*风扇定时功能处理*/
-		if(setTime && fanstate)
+		if(setTime && fanstate && setTimeTrigger)
 		{
 			cntSetTime++;
-			if(cntSetTime%30==0)
+			if(cntSetTime%18==0 && impose==1)
 			{
 				setTime--;
 				cntSetTime=0;
 			}
+			else if(cntSetTime%(18*60)==0 && impose==2)
+			{
+				setTime--;
+				cntSetTime=0;
+			}
+			else if(cntSetTime%(18*60*60)==0 && impose==3)
+			{
+				setTime--;
+				cntSetTime=0;
+			}
+			
 			if(!setTime)
 			{
 				Fan_Off();
@@ -293,8 +397,8 @@ void TIM2_IRQHandler(void)
 		}
 		if(!setTime && setTimeTrigger)
 		{
-			ToleggePinsettime();
-			BuzzeSetTimeTollde();
+			//ToleggePinsettime();
+			//BuzzeSetTimeTollde();
 		}
 		BKP_WriteData(BKP_DR3,setTime);
 		/*风扇摇头功能处理*/
@@ -324,6 +428,7 @@ void TIM2_IRQHandler(void)
 		}
 		BKP_WriteData(BKP_DR4,angle);
 		OLED_ShowMenuInfoFan();
+//		DHT11_ReadData(&temp, &humi,&tempfloat,&adctime);
 		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 	}	
 }

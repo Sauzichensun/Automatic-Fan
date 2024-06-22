@@ -8,6 +8,7 @@ extern uint8_t mode;
 extern uint8_t setTimeTrigger;
 extern uint8_t state;
 extern uint8_t angle;
+extern uint8_t impose;
 void My_BKPInit(void)
 {
 	/*开启时钟*/
@@ -40,5 +41,7 @@ void Primitive_DataInit(void)
   servoShake=(state & 0X04)>>2;
   mode=(state & 0X02)>>1;
 	setTimeTrigger=state & 0x01;
+	impose = (state & 0X78)>>3;
 	BKP_RreadData(BKP_DR4,&angle);
+	BKP_RreadData(BKP_DR3,&setTime);
 }

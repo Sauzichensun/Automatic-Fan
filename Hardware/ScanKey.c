@@ -1,8 +1,8 @@
 #include "stm32f10x.h"                  // Device header
 
-#define ROW1_PIN  GPIO_Pin_1
-#define ROW2_PIN  GPIO_Pin_10
-#define ROW3_PIN  GPIO_Pin_11
+#define ROW1_PIN  GPIO_Pin_5
+#define ROW2_PIN  GPIO_Pin_6
+#define ROW3_PIN  GPIO_Pin_7
 #define COL1_PIN  GPIO_Pin_15
 #define COL2_PIN  GPIO_Pin_14
 #define COL3_PIN  GPIO_Pin_13
@@ -30,6 +30,7 @@ void init_gpio(void)
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
 	
     GPIO_Init(COL1_GPIO, &GPIO_InitStructure);
+	
 }
 
 uint8_t scan_keypad(void) 
@@ -38,7 +39,7 @@ uint8_t scan_keypad(void)
     GPIO_SetBits(ROW1_GPIO, ROW1_PIN | ROW2_PIN | ROW3_PIN);
 
     // 拉低ROW1
-    GPIO_ResetBits(ROW1_GPIO, ROW1_PIN);
+    GPIO_ResetBits(ROW3_GPIO, ROW1_PIN);
     if (!GPIO_ReadInputDataBit(COL1_GPIO, COL1_PIN)) return 1;
     if (!GPIO_ReadInputDataBit(COL2_GPIO, COL2_PIN)) return 2;
     if (!GPIO_ReadInputDataBit(COL3_GPIO, COL3_PIN)) return 3;
@@ -46,7 +47,7 @@ uint8_t scan_keypad(void)
 
     // 拉低ROW2
 
-    GPIO_ResetBits(ROW3_GPIO, ROW2_PIN);
+    GPIO_ResetBits(ROW2_GPIO, ROW2_PIN);
     if (!GPIO_ReadInputDataBit(COL1_GPIO, COL1_PIN)) return 4;
     if (!GPIO_ReadInputDataBit(COL2_GPIO, COL2_PIN)) return 5;
     if (!GPIO_ReadInputDataBit(COL3_GPIO, COL3_PIN)) return 6;

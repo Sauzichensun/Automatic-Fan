@@ -764,6 +764,16 @@
               <FileType>5</FileType>
               <FilePath>.\Hardware\TEMP.h</FilePath>
             </File>
+            <File>
+              <FileName>BLUETOOTH.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Hardware\BLUETOOTH.c</FilePath>
+            </File>
+            <File>
+              <FileName>BLUETOOTH.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Hardware\BLUETOOTH.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
